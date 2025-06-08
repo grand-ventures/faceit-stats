@@ -1,15 +1,12 @@
 // Wait for DOM to be ready then start extension
 function initExtension() {
-    console.log('[FACEIT Extension] Starting extension...');
     const steamid = getSteamID();
-    console.log('[FACEIT Extension] Extracted Steam ID:', steamid);
     loadFaceITProfile(steamid);
     addGameLinks();
 }
 
 // Add links to supported game sections
 function addGameLinks() {
-    console.log('[FACEIT Extension] Adding game links...');
     
     // Game configuration mapping
     const gameConfigs = {
@@ -125,8 +122,6 @@ function addGameLinks() {
         const gameElements = document.querySelectorAll(gameSelectors.join(', '));
         
         if (gameElements.length > 0) {
-            console.log(`[FACEIT Extension] Found ${config.name} game section`);
-            
             gameElements.forEach(element => {
                 // Find the game container first, then look for stats section within it
                 let gameContainer = element.closest('.recent_game_content');
@@ -137,8 +132,6 @@ function addGameLinks() {
                     if (gameStatsSection.querySelector('.eloking-game-links')) {
                         return; // Skip if already processed
                     }
-                    
-                    console.log(`[FACEIT Extension] Adding links for ${config.name}`);
                     
                     // Look for existing publishedfilecounts container within stats section
                     let linksContainer = gameStatsSection.querySelector('.game_info_stats_publishedfilecounts');
@@ -179,13 +172,9 @@ function addGameLinks() {
                     // Add the links to the container
                     linksContainer.appendChild(newsLink);
                     linksContainer.appendChild(boostLink);
-                    
-                    console.log(`[FACEIT Extension] Successfully added ${config.name} game links`);
                 }
             });
-        } else {
-                         console.log(`[FACEIT Extension] No ${config.name} game section found on this profile`);
-         }
+        }
      });
      
      // Check games by name patterns as fallback
@@ -199,8 +188,6 @@ function addGameLinks() {
          );
          
          if (gameElements.length > 0) {
-             console.log(`[FACEIT Extension] Found ${gameName} game by name pattern`);
-             
              gameElements.forEach(element => {
                  // Find the game container first, then look for stats section within it
                  let gameContainer = element.closest('.recent_game_content');
@@ -211,8 +198,6 @@ function addGameLinks() {
                      if (gameStatsSection.querySelector('.eloking-game-links')) {
                          return; // Skip if already processed
                      }
-                     
-                     console.log(`[FACEIT Extension] Adding links for ${gameName} (by name)`);
                      
                      // Look for existing publishedfilecounts container within stats section
                      let linksContainer = gameStatsSection.querySelector('.game_info_stats_publishedfilecounts');
@@ -257,12 +242,8 @@ function addGameLinks() {
                      // Add the links to the container
                      linksContainer.appendChild(newsLink);
                      linksContainer.appendChild(boostLink);
-                     
-                     console.log(`[FACEIT Extension] Successfully added ${gameName} game links (by name)`);
                  }
              });
-         } else {
-             console.log(`[FACEIT Extension] No ${gameName} game section found by name pattern`);
          }
      });
 }
@@ -292,30 +273,22 @@ let id,
 function loadFaceITProfile(steamid) {
     // Check if steamID was recieved successfully
     if (steamid === null) {
-        console.log('[FACEIT Extension] No Steam ID found, stopping extension');
         return;
     }
 
-    console.log('[FACEIT Extension] Loading FACEIT profile for Steam ID:', steamid);
-    
     // Get FaceIT profile using Steam ID lookup
     const playerUrl = 'https://open.faceit.com/data/v4/players?game=cs2&game_player_id=' + steamid;
-    console.log('[FACEIT Extension] Making API request to:', playerUrl);
     
     chrome.runtime.sendMessage(playerUrl,
         result => {
-            console.log('[FACEIT Extension] Player API response:', result);
             onFaceITDirectProfileLoaded(result);
         }
     );
 }
 
 async function onFaceITDirectProfileLoaded(result) {
-    console.log('[FACEIT Extension] Processing direct FACEIT profile result');
-
     if (result && result.player_id) {
         const profile = result;
-        console.log('[FACEIT Extension] Found FACEIT profile:', profile);
 
         //Fill in start data
         id = profile.player_id;
@@ -323,8 +296,6 @@ async function onFaceITDirectProfileLoaded(result) {
         country = profile.country;
         level = profile.games && profile.games.cs2 ? profile.games.cs2.skill_level : 1;
         levelImg = chrome.runtime.getURL(`./img/levels/${level}.svg`);
-        
-        console.log('[FACEIT Extension] Profile data:', { id, username, country, level });
 
         updateDOM();
 
@@ -355,9 +326,7 @@ async function onFaceITDirectProfileLoaded(result) {
 
         // Get last match date from history
         chrome.runtime.sendMessage(`https://open.faceit.com/data/v4/players/${id}/history?game=cs2&offset=0&limit=1`,
-            result => {
-                console.log('[FACEIT Extension] Player history response:', result);
-                
+            result => {                
                 if (result && result.items && result.items.length > 0) {
                     const lastMatchTimestamp = result.items[0].finished_at;
                     if (lastMatchTimestamp) {
@@ -375,7 +344,6 @@ async function onFaceITDirectProfileLoaded(result) {
                             lastMatch = lastMatchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }
                         
-                        console.log('[FACEIT Extension] Last match:', lastMatch);
                     }
                 }
                 
@@ -383,19 +351,15 @@ async function onFaceITDirectProfileLoaded(result) {
             }
         );
 
-    } else {
-        console.log('[FACEIT Extension] No FACEIT profile found for this user');
     }
 
 }
 
 // Keep the old function as fallback for search-based lookup
 async function onFaceITProfileLoaded(result) {
-    console.log('[FACEIT Extension] Processing FACEIT profile result');
     const profile = await getMainProfile(result);
 
     if (profile !== null) {
-        console.log('[FACEIT Extension] Found FACEIT profile:', profile);
 
         //Fill in start data
         id = profile.player_id;
@@ -404,8 +368,6 @@ async function onFaceITProfileLoaded(result) {
         level = profile.games && profile.games.cs2 ? profile.games.cs2.skill_level : 1;
         levelImg = chrome.runtime.getURL(`./img/levels/${level}.svg`);
         
-        console.log('[FACEIT Extension] Profile data:', { id, username, country, level });
-
         updateDOM();
 
         // Check for bans using new API
@@ -435,9 +397,7 @@ async function onFaceITProfileLoaded(result) {
 
         // Get last match date from history
         chrome.runtime.sendMessage(`https://open.faceit.com/data/v4/players/${id}/history?game=cs2&offset=0&limit=1`,
-            result => {
-                console.log('[FACEIT Extension] Player history response:', result);
-                
+            result => {            
                 if (result && result.items && result.items.length > 0) {
                     const lastMatchTimestamp = result.items[0].finished_at;
                     if (lastMatchTimestamp) {
@@ -454,8 +414,6 @@ async function onFaceITProfileLoaded(result) {
                         } else {
                             lastMatch = lastMatchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }
-                        
-                        console.log('[FACEIT Extension] Last match:', lastMatch);
                     }
                 }
                 
@@ -463,15 +421,11 @@ async function onFaceITProfileLoaded(result) {
             }
         );
 
-    } else {
-        console.log('[FACEIT Extension] No FACEIT profile found for this user');
     }
 
 }
 
 function updateDOM() {
-    console.log('[FACEIT Extension] Updating DOM...');
-    
     // Insert FACEIT stats specifically into the profile left column
     let insertionPoint = null;
     
@@ -479,27 +433,19 @@ function updateDOM() {
     const profileLeftCol = document.querySelector('.profile_leftcol');
     if (profileLeftCol) {
         insertionPoint = profileLeftCol;
-        console.log('[FACEIT Extension] Found profile left column for insertion');
     } else {
-        console.log('[FACEIT Extension] Profile left column not found, trying fallback options');
         // Fallback options if profile_leftcol is not available
         const fallbackSelectors = ['.profile_customization_area', '.profile_content'];
         for (let selector of fallbackSelectors) {
             const element = document.querySelector(selector);
             if (element) {
                 insertionPoint = element;
-                console.log('[FACEIT Extension] Using fallback selector:', selector);
                 break;
             }
         }
     }
 
     if (!insertionPoint) {
-        console.log('[FACEIT Extension] Could not find suitable insertion point for FACEIT stats section');
-        console.log('[FACEIT Extension] Available elements:');
-        console.log('[FACEIT Extension] .profile_leftcol:', document.querySelector('.profile_leftcol'));
-        console.log('[FACEIT Extension] .profile_customization_area:', document.querySelector('.profile_customization_area'));
-        console.log('[FACEIT Extension] .profile_content:', document.querySelector('.profile_content'));
         return;
     }
 
@@ -545,16 +491,12 @@ function updateDOM() {
     </div>`;
 
     if (document.getElementById('facex')) {
-        console.log('[FACEIT Extension] Updating existing FACEIT element');
         document.getElementById('facex').innerHTML = textNode.innerHTML;
     } else {
-        console.log('[FACEIT Extension] Inserting new FACEIT element as separate section');
         // Insert the FACEIT stats as the first element in the insertion point
         // This will make it appear as a separate section before other content
         insertionPoint.insertBefore(textNode, insertionPoint.firstChild);
     }
-    
-    console.log('[FACEIT Extension] DOM update completed');
 }
 
 // getLevel function no longer needed with new API structure
@@ -565,31 +507,23 @@ function updateDOM() {
  * @returns 
  */
 async function getMainProfile(result) {
-    console.log('[FACEIT Extension] Getting main profile from search results');
-    
     if (!result || !result.items) {
-        console.log('[FACEIT Extension] Invalid search result structure:', result);
         return null;
     }
     
     let profile = null;
     const allPlayers = result.items;
-    console.log('[FACEIT Extension] Found', allPlayers.length, 'players in search results');
     
     if (allPlayers.length > 1) {
         allPlayers.map(async (user, index) => {
-            console.log('[FACEIT Extension] Checking player', index, ':', user.nickname, 'with games:', user.games ? Object.keys(user.games) : 'no games');
             if (user.games && user.games.cs2) {
-                console.log('[FACEIT Extension] Found CS2 player:', user.nickname);
                 profile = allPlayers[index];
             }
         });
     } else if (allPlayers.length === 1) {
-        console.log('[FACEIT Extension] Only one player found, using:', allPlayers[0].nickname);
         profile = allPlayers[0];
     }
 
-    console.log('[FACEIT Extension] Selected profile:', profile ? profile.nickname : 'none');
     return profile;
 }
 
@@ -598,13 +532,10 @@ async function getMainProfile(result) {
  * Gets steamID from page content
  * @returns string
  */
-function getSteamID() {
-    console.log('[FACEIT Extension] Attempting to extract Steam ID...');
-    
+function getSteamID() {    
     // Method 1: Try to get from report popup (when logged in)
     const abuseElements = document.getElementsByName("abuseID");
     if (abuseElements && abuseElements[0]) {
-        console.log('[FACEIT Extension] Found Steam ID from abuse report form');
         return abuseElements[0].value;
     }
 
@@ -613,7 +544,6 @@ function getSteamID() {
     if (urlParts.includes('profiles') && urlParts.length > 2) {
         const potentialSteamID = urlParts[urlParts.indexOf('profiles') + 1];
         if (potentialSteamID && potentialSteamID.match(/^\d{17}$/)) {
-            console.log('[FACEIT Extension] Found Steam ID from URL:', potentialSteamID);
             return potentialSteamID;
         }
     }
@@ -636,7 +566,6 @@ function getSteamID() {
             for (let pattern of patterns) {
                 const match = scriptContent.match(pattern);
                 if (match && match[1]) {
-                    console.log('[FACEIT Extension] Found Steam ID from script:', match[1]);
                     return match[1];
                 }
             }
@@ -658,7 +587,6 @@ function getSteamID() {
             if (elements.length > 0) {
                 const steamid = elements[0].getAttribute('data-steamid') || elements[0].getAttribute('data-profile-steamid');
                 if (steamid) {
-                    console.log('[FACEIT Extension] Found Steam ID from data attribute:', steamid);
                     return steamid;
                 }
             }
@@ -672,13 +600,11 @@ function getSteamID() {
         const pageContent = document.documentElement.innerHTML;
         const steamidMatch = pageContent.match(/\b(765611[0-9]{11})\b/); // SteamID64 always starts with 765611
         if (steamidMatch && steamidMatch[1]) {
-            console.log('[FACEIT Extension] Found Steam ID from page content:', steamidMatch[1]);
             return steamidMatch[1];
         }
     } catch (e) {
         console.log('[FACEIT Extension] Error with page content steamID extraction:', e);
     }
 
-    console.log('[FACEIT Extension] Could not extract steamID from page');
     return null;
 }

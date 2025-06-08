@@ -1,7 +1,5 @@
 chrome.runtime.onMessage.addListener(
     function(url, sender, onSuccess) {
-        console.log('[FACEIT Extension Background] Making request to:', url);
-        
         fetch(url, {
             method: 'GET',
             headers: {
@@ -11,39 +9,28 @@ chrome.runtime.onMessage.addListener(
             }
         })
             .then(response => {
-                console.log('[FACEIT Extension Background] Response status:', response.status);
-                console.log('[FACEIT Extension Background] Response headers:', response.headers);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
-                return response.text(); // Get as text first
+                return response.text();
             })
             .then(responseText => {
-                console.log('[FACEIT Extension Background] Raw response:', responseText);
-                
                 if (!responseText || responseText.trim() === '') {
-                    console.log('[FACEIT Extension Background] Empty response received');
-                    onSuccess({ players: { results: [] } }); // Return empty results
+                    onSuccess({ players: { results: [] } });
                     return;
                 }
                 
                 try {
                     const responseJson = JSON.parse(responseText);
-                    console.log('[FACEIT Extension Background] Parsed JSON:', responseJson);
                     onSuccess(responseJson.payload ?? responseJson);
                 } catch (parseError) {
-                    console.error('[FACEIT Extension Background] JSON parse error:', parseError);
-                    console.error('[FACEIT Extension Background] Response text that failed to parse:', responseText);
-                    onSuccess({ players: { results: [] } }); // Return empty results on parse error
+                    onSuccess({ players: { results: [] } });
                 }
             })
             .catch(error => {
-                console.error('[FACEIT Extension Background] Fetch error:', error);
-                onSuccess({ players: { results: [] } }); // Return empty results on error
+                onSuccess({ players: { results: [] } });
             });
         
-        return true;  // Will respond asynchronously.
+        return true;
     }
 );
