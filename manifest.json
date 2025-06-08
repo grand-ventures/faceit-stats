@@ -6,10 +6,10 @@
 		"48": "img/logo.png",
 		"128": "img/logo.png"
 	},
-	"version": "3",
+	    "version": "5.8",
 	"manifest_version": 3,
 	"homepage_url": "https://eloking.com",
-	"description": "Faceit Stats by Eloking is a Google Chrome extension that displays a users stats on FACEIT on their Steam profile.",
+	"description": "Faceit Stats by Eloking is a Google Chrome extension that displays a user's CS2 stats on FACEIT on their Steam profile.",
 	"action": {
 		"default_icon": "img/logo.png",
 		"default_title": "Faceit Stats by Eloking"
@@ -18,7 +18,8 @@
 		"service_worker": "scripts/background.js"
 	},
 	"host_permissions": [
-		"https://api.faceit.com/*"
+		"https://api.faceit.com/*",
+		"https://open.faceit.com/*"
 	],
 	"content_scripts": [
 		{
@@ -51,7 +52,8 @@
 				"img/levels/8.svg",
 				"img/levels/9.svg",
 				"img/levels/10.svg",
-				"img/levels/unranked.svg"
+				"img/levels/unranked.svg",
+				"img/logo.png"
 			],
 			"matches": [
 				"<all_urls>"
